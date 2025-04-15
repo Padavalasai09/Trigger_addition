@@ -12,49 +12,19 @@ datasource db {
 
 
 
-model Pipeline {
-  id           String    @id @unique
-  name         String    @unique
-  type         String
-  etag         String
-  lastPublishTime DateTime
-  policy       Json
-  annotations  Json
-  activities   Activity[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  status          String?  
-  message         String? 
-}
 
-model Activity {
-  id           String    @id @default(uuid())
-  pipelineId   String
-  pipeline     Pipeline  @relation(fields: [pipelineId], references: [id])
-  name         String
-  type         String
-  dependsOn    Json
-  policy       Json
-  userProperties Json
-  typeProperties Json
-  inputs       DatasetReference[] @relation("ActivityInputs")
-  outputs      DatasetReference[] @relation("ActivityOutputs")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  @@unique([pipelineId, name], name: "pipelineId_name")
-}
 
-model DatasetReference {
-  id           String    @id @default(uuid())
-  activityId   String
-  activity     Activity? @relation(fields: [activityId], references: [id], name: "ActivityInputs", map: "input_relation_fk")
-  outputActivity Activity? @relation(fields: [activityId], references: [id], name: "ActivityOutputs", map: "output_relation_fk")
-  referenceName String
-  type         String
-  parameters   Json
-  isInput      Boolean
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+model PipelineDummy {
+  name      String   @id  // Primary key
+  id        String   @unique  // Optional unique field
+  runId     String?
+  status    String?
+  message   String?
+  runStart  DateTime?
+  runEnd    DateTime?
+  properties Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@unique([activityId, referenceName, isInput])
+  @@map("PipelineDummy")
 }

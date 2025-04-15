@@ -1,0 +1,211 @@
+
+
+
+
+export default function PipelineDashboard() {
+  const router = useRouter();
+  const [pipelines, setPipelines] = useState<PipelineDummy[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchPipelineData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get("/api/pipeline-runs");
+      setPipelines(response.data.data);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching pipeline data:", err);
+      setError("Failed to load pipeline data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshAllData = async () => {
+    setRefreshing(true);
+    await fetchPipelineData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchPipelineData();
+  }, []);
+
+  const formatDuration = (start: Date | null, end: Date | null): string => {
+    if (!start || !end) return "N/A";
+    const ms = new Date(end).getTime() - new Date(start).getTime();
+    const seconds = Math.floor((ms / 1000) % 60);
+    const minutes = Math.floor((ms / (1000 * 60)) % 60);
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    return [hours > 0 ? `${hours}h` : "", minutes > 0 ? `${minutes}m` : "", `${seconds}s`].filter(Boolean).join(" ");
+  };
+
+  const formatDate = (date: Date | null): string => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleString();
+  };
+
+  const handlePipelineClick = (name: string) => {
+    router.push(`/pipeline/${name}`);
+  };
+
+  const getStatusData = () => {
+    const total = pipelines.length;
+    const succeeded = pipelines.filter(p => p.status === "Succeeded").length;
+    const failed = pipelines.filter(p => p.status === "Failed").length;
+    const pending = total - succeeded - failed;
+    return { total, succeeded, failed, pending };
+  };
+
+  const statusData = getStatusData();
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <p>Loading pipeline data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+        <p className="text-red-500 mb-4">{error}</p>
+        <button 
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          onClick={refreshAllData}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-2">
+          <Activity className="h-8 w-8" />
+          <h1 className="text-2xl font-bold">Pipeline Dashboard</h1>
+        </div>
+        <button 
+          className={`flex items-center gap-2 px-4 py-2 rounded ${refreshing ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+          onClick={refreshAllData}
+          disabled={refreshing}
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <BarChart className="h-8 w-8 text-blue-500" />
+            <div>
+              <p className="text-sm text-gray-500">Total Pipelines</p>
+              <p className="text-2xl font-bold">{statusData.total}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <CheckCircle className="h-8 w-8 text-green-500" />
+            <div>
+              <p className="text-sm text-gray-500">Successful</p>
+              <p className="text-2xl font-bold">{statusData.succeeded}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+            <div>
+              <p className="text-sm text-gray-500">Failed</p>
+              <p className="text-2xl font-bold">{statusData.failed}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 p-6">
+            <Clock className="h-8 w-8 text-yellow-500" />
+            <div>
+              <p className="text-sm text-gray-500">Pending</p>
+              <p className="text-2xl font-bold">{statusData.pending}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Pipeline Runs</CardTitle>
+              <CardDescription>Recent pipeline execution status and details</CardDescription>
+            </div>
+            <Badge>{pipelines.length} Pipelines</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[600px]">
+            <div className="space-y-4">
+              {pipelines.map((pipeline) => {
+                const status = pipeline.status || "Pending";
+                let statusClass = "bg-yellow-100 text-yellow-800";
+                let icon = <Clock className="h-4 w-4" />;
+
+                if (status === "Succeeded") {
+                  statusClass = "bg-green-100 text-green-800";
+                  icon = <CheckCircle className="h-4 w-4" />;
+                } else if (status === "Failed") {
+                  statusClass = "bg-red-100 text-red-800";
+                  icon = <AlertCircle className="h-4 w-4" />;
+                }
+
+                return (
+                  <Card 
+                    key={pipeline.id}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => handlePipelineClick(pipeline.name)}
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{pipeline.name}</h3>
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className={`px-2 py-1 rounded-full text-xs flex items-center gap-1 ${statusClass}`}>
+                              {icon}
+                              {status}
+                            </div>
+                            <p className="text-sm text-gray-500">
+                              {formatDate(pipeline.runStart)} - {formatDate(pipeline.runEnd)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            Duration: {formatDuration(pipeline.runStart, pipeline.runEnd)}
+                          </p>
+                          {pipeline.message && (
+                            <p className="text-sm text-gray-500 truncate max-w-xs">
+                              {pipeline.message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

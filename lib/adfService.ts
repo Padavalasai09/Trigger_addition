@@ -1,8 +1,9 @@
 // lib/adfService.ts
 import axios from "axios";
 import { getAzureAccessToken } from "./azureAuth";
+import { subDays, formatISO } from "date-fns";
 
-export async function getPipelineRuns() {
+export async function getPipelineRuns(daysToLookBack = 7) {
   const token = await getAzureAccessToken();
 
   const subscriptionId = process.env.AZURE_SUBSCRIPTION_ID!;
@@ -21,63 +22,81 @@ export async function getPipelineRuns() {
   );
 
   const pipelineDefinitions = pipelineDefResponse.data.value;
+  const pipelineNames = pipelineDefinitions.map((p: any) => p.name);
 
-  const enrichedPipelines = [];
+  // Step 2: Query recent runs for all pipelines
+  const now = new Date();
+  const lastUpdatedAfter = subDays(now, daysToLookBack);
+  
+  try {
+    const queryResponse = await axios.post(
+      `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.DataFactory/factories/${factoryName}/queryPipelineRuns?api-version=2018-06-01`,
+      {
+        lastUpdatedAfter: formatISO(lastUpdatedAfter),
+        lastUpdatedBefore: formatISO(now),
+        filters: [
+          {
+            operand: "PipelineName",
+            operator: "In",
+            values: pipelineNames
+          }
+        ],
+        orderBy: [
+          {
+            orderBy: "RunStart",
+            order: "Desc"
+          }
+        ]
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-  for (const pipeline of pipelineDefinitions) {
-    const pipelineName = pipeline.name;
+    // Group runs by pipeline name to get the most recent for each
+    const runsByPipeline = new Map<string, any>();
+    queryResponse.data.value.forEach((run: any) => {
+      if (!runsByPipeline.has(run.pipelineName) || 
+          new Date(run.runStart) > new Date(runsByPipeline.get(run.pipelineName).runStart)) {
+        runsByPipeline.set(run.pipelineName, run);
+      }
+    });
 
-    try {
-      // Step 2: Create a run to get a runId
-      const createRunResponse = await axios.post(
-        `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.DataFactory/factories/${factoryName}/pipelines/${pipelineName}/createRun?api-version=2018-06-01`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+    // Step 3: Combine pipeline definitions with their most recent run
+    const enrichedPipelines = pipelineDefinitions.map((pipeline: any) => {
+      const pipelineName = pipeline.name;
+      const recentRun = runsByPipeline.get(pipelineName);
 
-      const runId = createRunResponse.data.runId;
-
-      // Step 3: Get the status of that runId
-      const runStatusResponse = await axios.get(
-        `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.DataFactory/factories/${factoryName}/pipelineruns/${runId}?api-version=2018-06-01`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const runInfo = runStatusResponse.data;
-
-      enrichedPipelines.push({
+      return {
         name: pipelineName,
-        runId: runInfo.runId || null,
-        status: runInfo.status || "Unknown",
-        message: runInfo.message || runInfo.invokedBy?.name || null,
-        runStart: runInfo.runStart || null,
-        runEnd: runInfo.runEnd || null,
-        properties: runInfo.properties || {}, // Including pipeline properties
-      });
+        runId: recentRun?.runId || null,
+        status: recentRun?.status || "NeverRun",
+        message: recentRun?.message || recentRun?.invokedBy?.name || null,
+        runStart: recentRun?.runStart || null,
+        runEnd: recentRun?.runEnd || null,
+        durationInMs: recentRun?.durationInMs || null,
+        properties: pipeline.properties || {},
+      };
+    });
 
-    } catch (err) {
-      console.error(`❌ Error fetching run info for pipeline ${pipelineName}`, err?.response?.data || err.message);
-      enrichedPipelines.push({
-        name: pipelineName,
-        runId: null,
-        status: "Error",
-        message: err?.response?.data?.error?.message || "",
-        runStart: null,
-        runEnd: null,
-        properties: {}, // Handle missing properties gracefully
-      });
-    }
+    console.log(enrichedPipelines)
+
+    return enrichedPipelines;
+
+  } catch (err) {
+    console.error("❌ Error querying pipeline runs", err?.response?.data || err.message);
+    // Fallback to returning just pipeline definitions if query fails
+    return pipelineDefinitions.map((pipeline: any) => ({
+      name: pipeline.name,
+      runId: null,
+      status: "Unknown",
+      message: "Failed to fetch run data",
+      runStart: null,
+      runEnd: null,
+      properties: pipeline.properties || {},
+    }));
   }
-
-  return enrichedPipelines;
 }

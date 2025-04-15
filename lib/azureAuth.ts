@@ -16,6 +16,6 @@ export async function getAzureAccessToken(): Promise<string> {
       resource,
     })
   );
-
+  console.log(response.data.access_token)
   return response.data.access_token;
 }

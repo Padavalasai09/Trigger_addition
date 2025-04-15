@@ -10,111 +10,32 @@ export async function GET() {
     for (const pipelineData of pipelineRuns) {
       const runId = pipelineData.runId;
 
-      if (!runId) {
-        console.warn(`⛔ Skipping pipeline with missing runId:`, pipelineData);
-        continue;
-      }
-
-      const props = pipelineData.properties || {};
-
       // 🟢 Upsert Pipeline by unique name
-      const pipeline = await prisma.pipeline.upsert({
-        where: { name: pipelineData.name  }, // unique name
+      const pipeline = await prisma.pipelineDummy.upsert({
+        where: { name: pipelineData.name },
         update: {
-          type: "Manual",
-          etag: "",
-          lastPublishTime: pipelineData.runStart ? new Date(pipelineData.runStart) : null,
-          policy: {},
-          annotations: [],
+          runId: runId,
+          status: pipelineData.status || "Pending",
           message: pipelineData.message || null,
+          runStart: pipelineData.runStart ? new Date(pipelineData.runStart) : null,
+          runEnd: pipelineData.runEnd ? new Date(pipelineData.runEnd) : null,
+          properties: pipelineData.properties || {},
+          updatedAt: new Date(), // Always use current timestamp for updatedAt
         },
         create: {
-          id: runId,
-          name: pipelineData.name || "",
-          type: "Manual",
-          etag: "",
-          lastPublishTime: pipelineData.runStart ? new Date(pipelineData.runStart) : null,
-          policy: {},
-          annotations: [],
-          status: "Pending",
+          name: pipelineData.name,
+          id: runId || undefined, // Let Prisma auto-generate if null
+          runId: runId,
+          status: pipelineData.status || "Pending",
           message: pipelineData.message || null,
+          runStart: pipelineData.runStart ? new Date(pipelineData.runStart) : null,
+          runEnd: pipelineData.runEnd ? new Date(pipelineData.runEnd) : null,
+          properties: pipelineData.properties || {},
+          createdAt: new Date(), // Let Prisma handle default
+          updatedAt: new Date(),
         },
       });
 
-      if (props.activities && props.activities.length > 0) {
-        for (const activityData of props.activities) {
-          const activity = await prisma.activity.upsert({
-            where: {
-              pipelineId_name: {
-                pipelineId: pipeline.id,
-                name: activityData.name,
-              },
-            },
-            update: {
-              type: activityData.type,
-              dependsOn: activityData.dependsOn || [],
-              policy: activityData.policy || {},
-              userProperties: activityData.userProperties || [],
-              typeProperties: activityData.typeProperties || {},
-            },
-            create: {
-              pipelineId: pipeline.id,
-              name: activityData.name,
-              type: activityData.type,
-              dependsOn: activityData.dependsOn || [],
-              policy: activityData.policy || {},
-              userProperties: activityData.userProperties || [],
-              typeProperties: activityData.typeProperties || {},
-            },
-          });
-
-          for (const input of activityData.inputs || []) {
-            await prisma.datasetReference.upsert({
-              where: {
-                activityId_referenceName_isInput: {
-                  activityId: activity.id,
-                  referenceName: input.referenceName,
-                  isInput: true,
-                },
-              },
-              update: {
-                type: input.type,
-                parameters: input.parameters || {},
-              },
-              create: {
-                activityId: activity.id,
-                referenceName: input.referenceName,
-                type: input.type,
-                parameters: input.parameters || {},
-                isInput: true,
-              },
-            });
-          }
-
-          for (const output of activityData.outputs || []) {
-            await prisma.datasetReference.upsert({
-              where: {
-                activityId_referenceName_isInput: {
-                  activityId: activity.id,
-                  referenceName: output.referenceName,
-                  isInput: false,
-                },
-              },
-              update: {
-                type: output.type,
-                parameters: output.parameters || {},
-              },
-              create: {
-                activityId: activity.id,
-                referenceName: output.referenceName,
-                type: output.type,
-                parameters: output.parameters || {},
-                isInput: false,
-              },
-            });
-          }
-        }
-      }
 
       processedCount++;
     }

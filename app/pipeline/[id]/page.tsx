@@ -100,6 +100,7 @@ export default function PipelineDetailsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log(params.id)
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -108,17 +109,19 @@ export default function PipelineDetailsPage() {
         if (!response.ok) throw new Error("Failed to fetch pipeline data");
         
         const allRuns = await response.json();
+
+        console.log(allRuns.data)
         
         // Find the pipeline with matching ID
-        const pipelineRun = allRuns.find((run: PipelineRun) => run.id === params.id);
+        const pipelineRun = allRuns.data.find((run: PipelineRun) => run.id === params.id);
         
         if (!pipelineRun) {
           throw new Error(`Pipeline with ID ${params.id} not found`);
         }
-        console.log(pipelineRun.runId.slice(10))
+        // console.log(pipelineRun.runId.slice(10))
         // Fetch activity runs for this pipeline run
         const activitiesResponse = await fetch(
-          `/api/activity-runs/${pipelineRun.runId.slice(10)}`
+          `/api/activity-runs/${params.id}`
         );
         
         if (!activitiesResponse.ok) {

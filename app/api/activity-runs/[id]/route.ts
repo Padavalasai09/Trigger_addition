@@ -45,12 +45,13 @@ export async function GET(
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        lastUpdatedAfter: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-        lastUpdatedBefore: new Date().toISOString()
+        lastUpdatedAfter: "2025-01-01T00:00:00Z",
+        lastUpdatedBefore: "2026-01-02T23:59:59Z"
       })
     });
     
     console.log("9. Azure API response status:", response.status);
+    
     
     if (!response.ok) {
       console.error(`10. Azure API error: ${response.status} ${response.statusText}`);
@@ -68,6 +69,7 @@ export async function GET(
     
     console.log("12. Processing successful response");
     const data = await response.json();
+    console.log(data)
     return new Response(JSON.stringify(data), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

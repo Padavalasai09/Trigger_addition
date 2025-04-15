@@ -1,26 +1,575 @@
-@import "tailwindcss";
+.card-clickable:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease;
+  }
+ /* Nexus Design System - A modern, animated design system for data pipelines */
+
+/* Nexus Design System - Enhanced for Pipeline Dashboard */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Core colors */
+    --nexus-primary: #4f46e5;
+    --nexus-primary-light: #818cf8;
+    --nexus-primary-dark: #3730a3;
+    --nexus-secondary: #0ea5e9;
+    --nexus-success: #10b981;
+    --nexus-warning: #f59e0b;
+    --nexus-danger: #ef4444;
+    --nexus-background: #f8fafc;
+    --nexus-surface: #ffffff;
+    --nexus-text: #1e293b;
+    --nexus-text-secondary: #64748b;
+    --nexus-border: #e2e8f0;
+    
+    /* Gradients */
+    --nexus-gradient-primary: linear-gradient(135deg, var(--nexus-primary), var(--nexus-secondary));
+    --nexus-gradient-success: linear-gradient(135deg, var(--nexus-success), #34d399);
+    --nexus-gradient-danger: linear-gradient(135deg, var(--nexus-danger), #f87171);
+    
+    /* Shadows */
+    --nexus-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --nexus-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --nexus-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Animations */
+    --nexus-transition-fast: 150ms ease;
+    --nexus-transition: 300ms ease;
+    --nexus-transition-slow: 500ms ease;
   }
-}
+  
+  /* Container for the entire application */
+  .nexus-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    min-height: 100vh;
+  }
+  
+  /* Header styling */
+  .nexus-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--nexus-border);
+    position: relative;
+  }
+  
+  .nexus-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .nexus-logo-icon {
+    color: var(--nexus-primary);
+    width: 2rem;
+    height: 2rem;
+    animation: pulse 2s infinite;
+  }
+  
+  .nexus-logo h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    background: var(--nexus-gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 0;
+  }
+  
+  .nexus-tagline {
+    color: var(--nexus-text-secondary);
+    font-size: 1rem;
+    margin: 0;
+  }
+  
+  .nexus-refresh-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    background-color: var(--nexus-primary);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--nexus-transition);
+  }
+  
+  .nexus-refresh-button:hover {
+    background-color: var(--nexus-primary-dark);
+  }
+  
+  .nexus-refresh-button.refreshing {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .nexus-refresh-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .nexus-refresh-button.refreshing .nexus-refresh-icon {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Stats overview section */
+  .nexus-stats-overview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .nexus-stat-card {
+    background-color: var(--nexus-surface);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: var(--nexus-shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform var(--nexus-transition), box-shadow var(--nexus-transition);
+  }
+  
+  .nexus-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--nexus-shadow-lg);
+  }
+  
+  .nexus-stat-card.success .nexus-stat-icon {
+    color: var(--nexus-success);
+  }
+  
+  .nexus-stat-card.error .nexus-stat-icon {
+    color: var(--nexus-danger);
+  }
+  
+  .nexus-stat-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    background-color: var(--nexus-background);
+  }
+  
+  .nexus-stat-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: var(--nexus-primary);
+  }
+  
+  .nexus-stat-content {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .nexus-stat-content h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+  }
+  
+  .nexus-stat-content p {
+    font-size: 0.875rem;
+    color: var(--nexus-text-secondary);
+    margin: 0.25rem 0 0 0;
+  }
+  
+  /* Main dashboard area */
+  .nexus-dashboard {
+    flex: 1;
+  }
+  
+  .nexus-main-card {
+    height: 100%;
+    border: none;
+    box-shadow: var(--nexus-shadow);
+    border-radius: 1rem;
+    overflow: hidden;
+  }
+  
+  .nexus-card-header {
+    background-color: var(--nexus-surface);
+    border-bottom: 1px solid var(--nexus-border);
+    padding: 1.5rem;
+  }
+  
+  .nexus-card-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .nexus-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .nexus-runs-badge {
+    background-color: var(--nexus-primary);
+    color: white;
+    font-weight: 500;
+  }
+  
+  .nexus-card-content {
+    padding: 0;
+  }
+  
+  .nexus-scroll-area {
+    height: 600px;
+    padding: 1rem;
+  }
+  
+  .nexus-runs-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 1rem;
+  }
+  
+  /* Run cards */
+  .nexus-run-wrapper {
+    opacity: 0;
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.5s ease forwards;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .nexus-run-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--nexus-border);
+    border-radius: 0.75rem;
+    transition: all var(--nexus-transition);
+    cursor: pointer;
+  }
+  
+  .nexus-run-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--nexus-shadow);
+    border-color: var(--nexus-primary-light);
+  }
+  
+  .nexus-run-status-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+  }
+  
+  .nexus-run-card.success .nexus-run-status-indicator {
+    background: var(--nexus-gradient-success);
+  }
+  
+  .nexus-run-card.error .nexus-run-status-indicator {
+    background: var(--nexus-gradient-danger);
+  }
+  
+  .nexus-run-content {
+    padding: 1.5rem;
+  }
+  
+  .nexus-run-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+  
+  .nexus-pipeline-name {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .nexus-pipeline-name:after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--nexus-gradient-primary);
+    transition: width var(--nexus-transition);
+  }
+  
+  .nexus-run-card:hover .nexus-pipeline-name:after {
+    width: 100%;
+  }
+  
+  .nexus-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+  
+  .nexus-status.success {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--nexus-success);
+  }
+  
+  .nexus-status.error {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--nexus-danger);
+  }
+  
+  .nexus-status-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  
+  .nexus-run-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: var(--nexus-background);
+    border-radius: 0.5rem;
+  }
+  
+  .nexus-run-detail {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .nexus-detail-icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--nexus-primary);
+  }
+  
+  .nexus-detail-label {
+    color: var(--nexus-text-secondary);
+  }
+  
+  .nexus-detail-value {
+    font-weight: 600;
+    margin-left: auto;
+  }
+  
+  .nexus-run-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--nexus-border);
+  }
+  
+  .nexus-meta-item {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .nexus-meta-label {
+    color: var(--nexus-text-secondary);
+  }
+  
+  .nexus-meta-value {
+    font-weight: 500;
+  }
+  
+  .nexus-failure-reason {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+  }
+  
+  .nexus-failure-label {
+    font-weight: 600;
+    color: var(--nexus-danger);
+    margin-right: 0.5rem;
+  }
+  
+  /* Loading state */
+  .nexus-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 1rem;
+  }
+  
+  .loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: 3px solid rgba(79, 70, 229, 0.1);
+    border-top-color: var(--nexus-primary);
+    animation: spinner 1s linear infinite;
+  }
+  
+  @keyframes spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  /* Error state */
+  .nexus-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .nexus-error-icon {
+    width: 3rem;
+    height: 3rem;
+    color: var(--nexus-danger);
+  }
+  
+  .nexus-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--nexus-primary);
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--nexus-transition);
+  }
+  
+  .nexus-button:hover {
+    background-color: var(--nexus-primary-dark);
+  }
+  
+  /* Footer */
+  .nexus-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--nexus-border);
+    text-align: center;
+    color: var(--nexus-text-secondary);
+    font-size: 0.875rem;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (min-width: 768px) {
+    .nexus-runs-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .nexus-stats-overview {
+      grid-template-columns: 1fr;
+    }
+    
+    .nexus-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .nexus-refresh-button {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+    
+    .nexus-run-details {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Pulse animation for logo */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+  
+  /* Custom scrollbar */
+  .nexus-scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nexus-primary-light) var(--nexus-border);
+  }
+  
+  .nexus-scroll-area::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .nexus-scroll-area::-webkit-scrollbar-track {
+    background: var(--nexus-border);
+    border-radius: 4px;
+  }
+  
+  .nexus-scroll-area::-webkit-scrollbar-thumb {
+    background: var(--nexus-primary-light);
+    border-radius: 4px;
+  }
+  /* Add to your nexus.css or relevant CSS file */
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+.nexus-run-card.pending {
+    border-left: 4px solid #facc15; /* amber-400 */
+    background-color: #fefce8;      /* light amber background */
+    transition: background-color 0.3s ease, border-left 0.3s ease;
+  }
+  
+  .nexus-status.pending {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #fef9c3; /* yellow-100 */
+    color: #ca8a04;            /* amber-600 */
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  
+  .nexus-status.pending .nexus-status-icon {
+     /* color: #ca8a04;  */
+  }
+  
+
+
+
+
+

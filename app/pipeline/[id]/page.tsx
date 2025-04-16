@@ -98,6 +98,7 @@ export default function PipelineDetailsPage() {
   const [activityRuns, setActivityRuns] = useState<ActivityRun[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [error, setError] = useState<string | null>(null);
+  const [pipeline_name,setName] = useState<String>("")
 
   useEffect(() => {
     console.log(params.id)
@@ -113,7 +114,13 @@ export default function PipelineDetailsPage() {
         console.log(allRuns.data)
         
         // Find the pipeline with matching ID
-        const pipelineRun = allRuns.data.find((run: PipelineRun) => run.id === params.id);
+        const pipelineRun = allRuns.data.find((run: PipelineRun) => run.runId === params.id);
+        for(let i=0 ; i<allRuns.data.length ; i++){
+          if(allRuns.data[i].runId === params.id){
+            setName(allRuns.data[i].name)
+
+          }
+        }
         
         if (!pipelineRun) {
           throw new Error(`Pipeline with ID ${params.id} not found`);
@@ -140,7 +147,7 @@ export default function PipelineDetailsPage() {
           etag: pipelineRun.runId || "",
           lastPublishTime: pipelineRun.createdAt,
           policy: {
-            triggerType: pipelineRun.triggerType || "Manual",
+            triggerType: pipelineRun.triggerType || "N/A",
             dataVolume: pipelineRun.dataVolume || "N/A",
             failureReason: pipelineRun.failureReason,
             parameters: pipelineRun.parameters || {}
@@ -267,27 +274,12 @@ export default function PipelineDetailsPage() {
           >
             <ArrowLeft className="h-4 w-4 mr-2" /> Back
           </Button>
-          <h1 className="text-2xl font-bold hidden md:block text-gray-800">{pipeline.name}</h1>
+          <h1 className="text-2xl font-bold hidden md:block text-gray-800">{pipeline_name}</h1>
         </div>
-        <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="bg-white hover:bg-gray-100 border-gray-200 shadow-sm"
-          >
-            <Clock className="h-4 w-4 mr-2" /> View History
-          </Button>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-          >
-            <Activity className="h-4 w-4 mr-2" /> Run Pipeline
-          </Button>
-        </div>
+        
       </div>
 
-      <h1 className="text-2xl font-bold mb-4 md:hidden text-gray-800">{pipeline.name}</h1>
+      <h1 className="text-2xl font-bold mb-4 md:hidden text-gray-800">{pipeline_name}</h1>
 
       {/* Summary Card */}
       <Card className="mb-6 overflow-hidden border-t-4 shadow-lg rounded-lg" 
@@ -387,7 +379,7 @@ export default function PipelineDetailsPage() {
                   <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
                     <div className="flex justify-between border-b border-gray-200 pb-2">
                       <span className="text-sm text-gray-600">Pipeline Name</span>
-                      <span className="font-medium text-gray-800">{pipeline.name}</span>
+                      <span className="font-medium text-gray-800">{pipeline_name}</span>
                     </div>
                     <div className="flex justify-between border-b border-gray-200 pb-2">
                       <span className="text-sm text-gray-600">Pipeline Type</span>

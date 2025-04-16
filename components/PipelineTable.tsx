@@ -30,30 +30,39 @@ export default function PipelineDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchPipelineData = async () => {
-    try {
-      setIsLoading(true);
+    try { 
       const response = await axios.get("/api/pipeline-runs");
       setPipelines(response.data.data);
       setError(null);
     } catch (err) {
       console.error("Error fetching pipeline data:", err);
       setError("Failed to load pipeline data");
-    } finally {
-      setIsLoading(false);
+    } 
+  };
+
+  const fetchAndStoreData = async () => {
+    try {
+      await axios.get("http://localhost:3000/api/fetch-and-store");
+    } catch (err) {
+      console.error("Error fetching and storing data:", err);
     }
   };
 
-
-
   const refreshAllData = async () => {
     setRefreshing(true);
+    setIsLoading(false);
+    await fetchAndStoreData();
     await fetchPipelineData();
     setRefreshing(false);
   };
 
 
   useEffect(() => {
-    fetchPipelineData();
+    console.log("fetch call before")
+    fetchPipelineData()
+    refreshAllData();
+    const interval = setInterval(() => refreshAllData(), 10000);
+    return () => clearInterval(interval);
   }, []);
 
 
@@ -183,7 +192,7 @@ export default function PipelineDashboard() {
                     <div key={run.id} className="nexus-run-wrapper animate-fadeIn" style={{ animationDelay: `${index * 100}ms` }}>
                       <Card 
                         className={`nexus-run-card ${statusClass}`}
-                        onClick={() => handleRunClick(run.id)}
+                        onClick={() => handleRunClick(run.runId)}
                       >
                         <div className="nexus-run-status-indicator"></div>
                         <CardContent className="nexus-run-content">

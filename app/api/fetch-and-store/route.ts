@@ -10,7 +10,7 @@ export async function GET() {
     for (const pipelineData of pipelineRuns) {
       const runId = pipelineData.runId;
 
-      // 🟢 Upsert Pipeline by unique name
+      //  Upsert Pipeline by unique name
       const pipeline = await prisma.pipelineDummy.upsert({
         where: { name: pipelineData.name },
         update: {

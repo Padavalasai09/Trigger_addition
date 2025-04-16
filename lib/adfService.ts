@@ -4,6 +4,7 @@ import { getAzureAccessToken } from "./azureAuth";
 import { subDays, formatISO } from "date-fns";
 
 export async function getPipelineRuns(daysToLookBack = 7) {
+  console.log("Updating the data")
   const token = await getAzureAccessToken();
 
   const subscriptionId = process.env.AZURE_SUBSCRIPTION_ID!;
@@ -32,8 +33,8 @@ export async function getPipelineRuns(daysToLookBack = 7) {
     const queryResponse = await axios.post(
       `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.DataFactory/factories/${factoryName}/queryPipelineRuns?api-version=2018-06-01`,
       {
-        lastUpdatedAfter: formatISO(lastUpdatedAfter),
-        lastUpdatedBefore: formatISO(now),
+        lastUpdatedAfter: "2025-04-10T11:23:53.7223509Z",
+        lastUpdatedBefore: "2025-04-20T11:23:53.7223509Z",
         filters: [
           {
             operand: "PipelineName",

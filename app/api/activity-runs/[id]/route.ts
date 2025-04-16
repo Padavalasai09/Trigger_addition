@@ -11,6 +11,7 @@ export async function GET(
   
   try {
     const pipelineRunId = params.id;
+    
     console.log("3. Pipeline Run ID:", pipelineRunId);
     
     if (!pipelineRunId) {

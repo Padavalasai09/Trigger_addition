@@ -1,4 +1,3 @@
-// app/api/activity-runs/[pipelineRunId]/route.ts
 import { NextResponse } from 'next/server';
 import { getAzureAccessToken } from '@/lib/azureAuth';
 
@@ -29,16 +28,15 @@ export async function GET(
     
     console.log("5. Preparing to call Azure API");
     
-    // Azure API endpoint
     const apiUrl = `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.DataFactory/factories/${factoryName}/pipelineruns/${pipelineRunId}/queryActivityruns?api-version=2018-06-01`;
     
     console.log("6. Getting Azure token");
-    // Get Azure access token
+
     const token = await getAzureAccessToken();
     console.log("7. Token received, length:", token ? token.length : 0);
     
     console.log("8. Calling Azure API:", apiUrl);
-    // Call Azure Data Factory API
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {

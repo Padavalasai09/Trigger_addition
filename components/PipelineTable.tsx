@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, CheckCircle, Clock, Calendar, Database, BarChart, Activity, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+
 
 interface PipelineDummy {
   id: string;
@@ -61,7 +62,7 @@ export default function PipelineDashboard() {
     console.log("fetch call before")
     fetchPipelineData()
     refreshAllData();
-    const interval = setInterval(() => refreshAllData(), 10000);
+    const interval = setInterval(() => refreshAllData(), 100000);
     return () => clearInterval(interval);
   }, []);
 
@@ -76,10 +77,10 @@ export default function PipelineDashboard() {
     return [hours > 0 ? `${hours}h` : "", minutes > 0 ? `${minutes}m` : "", `${seconds}s`].filter(Boolean).join(" ");
   };
 
-  const formatDate = (date: Date | null): string => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleString();
-  };
+    const formatDate = (date: Date | null): string => {
+      if (!date) return "N/A";
+      return new Date(date).toLocaleString();
+    };
 
   const handleRunClick = (runId: string) => {
     console.log(runId)
@@ -192,7 +193,7 @@ export default function PipelineDashboard() {
                     <div key={run.id} className="nexus-run-wrapper animate-fadeIn" style={{ animationDelay: `${index * 100}ms` }}>
                       <Card 
                         className={`nexus-run-card ${statusClass}`}
-                        onClick={() => handleRunClick(run.runId)}
+                        onClick={() => handleRunClick(run.runId )}
                       >
                         <div className="nexus-run-status-indicator"></div>
                         <CardContent className="nexus-run-content">

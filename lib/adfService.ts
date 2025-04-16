@@ -11,7 +11,7 @@ export async function getPipelineRuns(daysToLookBack = 7) {
   const resourceGroup = process.env.AZURE_RESOURCE_GROUP!;
   const factoryName = process.env.AZURE_FACTORY_NAME!;
 
-  // Step 1: Get all pipeline definitions
+  // I am getting all the pipelines which are there
   const pipelineDefResponse = await axios.get(
     `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.DataFactory/factories/${factoryName}/pipelines?api-version=2018-06-01`,
     {
@@ -25,11 +25,12 @@ export async function getPipelineRuns(daysToLookBack = 7) {
   const pipelineDefinitions = pipelineDefResponse.data.value;
   const pipelineNames = pipelineDefinitions.map((p: any) => p.name);
 
-  // Step 2: Query recent runs for all pipelines
+  
   const now = new Date();
   const lastUpdatedAfter = subDays(now, daysToLookBack);
   
   try {
+    // getting the status of the pipelines after runned
     const queryResponse = await axios.post(
       `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.DataFactory/factories/${factoryName}/queryPipelineRuns?api-version=2018-06-01`,
       {
@@ -88,8 +89,8 @@ export async function getPipelineRuns(daysToLookBack = 7) {
     return enrichedPipelines;
 
   } catch (err) {
-    console.error("❌ Error querying pipeline runs", err?.response?.data || err.message);
-    // Fallback to returning just pipeline definitions if query fails
+    console.error("Error querying pipeline runs", err?.response?.data || err.message);
+
     return pipelineDefinitions.map((pipeline: any) => ({
       name: pipeline.name,
       runId: null,

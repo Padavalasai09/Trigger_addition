@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    // Fetch all records from PipelineDummy table
+
     const pipelineData = await prisma.pipelineDummy.findMany({
       orderBy: {
-        createdAt: 'desc', // Optional: Sort by newest first
+        createdAt: 'desc', 
       },
     });
 

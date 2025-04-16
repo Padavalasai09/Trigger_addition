@@ -11,12 +11,9 @@ datasource db {
 
 
 
-
-
-
 model PipelineDummy {
-  name      String   @id  // Primary key
-  id        String   @unique  // Optional unique field
+  name      String   @id  
+  id        String   @unique  
   runId     String?
   status    String?
   message   String?

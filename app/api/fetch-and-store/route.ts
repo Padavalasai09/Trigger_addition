@@ -10,7 +10,7 @@ export async function GET() {
     for (const pipelineData of pipelineRuns) {
       const runId = pipelineData.runId;
 
-      //  Upsert Pipeline by unique name
+    
       const pipeline = await prisma.pipelineDummy.upsert({
         where: { name: pipelineData.name },
         update: {
@@ -20,18 +20,18 @@ export async function GET() {
           runStart: pipelineData.runStart ? new Date(pipelineData.runStart) : null,
           runEnd: pipelineData.runEnd ? new Date(pipelineData.runEnd) : null,
           properties: pipelineData.properties || {},
-          updatedAt: new Date(), // Always use current timestamp for updatedAt
+          updatedAt: new Date(), 
         },
         create: {
           name: pipelineData.name,
-          id: runId || undefined, // Let Prisma auto-generate if null
+          id: runId || undefined, 
           runId: runId,
           status: pipelineData.status || "Pending",
           message: pipelineData.message || null,
           runStart: pipelineData.runStart ? new Date(pipelineData.runStart) : null,
           runEnd: pipelineData.runEnd ? new Date(pipelineData.runEnd) : null,
           properties: pipelineData.properties || {},
-          createdAt: new Date(), // Let Prisma handle default
+          createdAt: new Date(), 
           updatedAt: new Date(),
         },
       });

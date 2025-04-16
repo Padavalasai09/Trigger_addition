@@ -125,8 +125,7 @@ export default function PipelineDetailsPage() {
         if (!pipelineRun) {
           throw new Error(`Pipeline with ID ${params.id} not found`);
         }
-        // console.log(pipelineRun.runId.slice(10))
-        // Fetch activity runs for this pipeline run
+  
         const activitiesResponse = await fetch(
           `/api/activity-runs/${params.id}`
         );
@@ -139,7 +138,7 @@ export default function PipelineDetailsPage() {
         console.log(activitiesData)
         setActivityRuns(activitiesData.value || []);
 
-        // Transform the run data into your PipelineDetail format
+        // Transform the run data into your PipelineDetail format 
         const pipelineDetail: PipelineDetail = {
           id: pipelineRun.id,
           name: pipelineRun.pipelineName,
@@ -199,7 +198,7 @@ export default function PipelineDetailsPage() {
       case "failed":
         return <XCircle className="h-5 w-5 text-rose-500" />;
       case "running":
-      case "inprogress":
+      case "Queued":
         return <Clock className="h-5 w-5 text-sky-500" />;
       default:
         return <Activity className="h-5 w-5 text-gray-500" />;
@@ -253,8 +252,19 @@ export default function PipelineDetailsPage() {
 
   // Find the primary activity or use the first one
   const primaryActivity = pipeline.activities.length > 0 ? pipeline.activities[0] : null;
-  const mainStatus = primaryActivity?.status || "Unknown";
-  
+  var cur_status = "succeeded"
+  for (let i =0 ;i<pipeline.activities.length; i++){
+      if(pipeline.activities[i]?.status === "Queued"  ){
+        cur_status = "queued"
+      }
+      if(pipeline.activities[i]?.status === "Failed"){
+        cur_status = "failed"
+        break;
+      }
+
+  }
+  const mainStatus = cur_status;
+  console.log("Current Status ",mainStatus)
   // Calculate total data processed
   const totalDataRead = pipeline.activities.reduce((sum, activity) => 
     sum + (activity.output?.dataRead || 0), 0);
@@ -285,7 +295,7 @@ export default function PipelineDetailsPage() {
       <Card className="mb-6 overflow-hidden border-t-4 shadow-lg rounded-lg" 
         style={{ borderTopColor: mainStatus?.toLowerCase() === "succeeded" ? "#10b981" : 
                                 mainStatus?.toLowerCase() === "failed" ? "#ef4444" : 
-                                mainStatus?.toLowerCase() === "running" ? "#3b82f6" : "#6b7280" }}>
+                                mainStatus?.toLowerCase() === "queued" ? "#3b82f6" : "#6b7280" }}>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="flex flex-col">
@@ -498,10 +508,28 @@ export default function PipelineDetailsPage() {
         {/* Activities Tab */}
         <TabsContent value="activities" className="space-y-4">
           <Card className="shadow-md rounded-lg overflow-hidden border border-gray-200">
-            <CardHeader className="bg-white border-b border-gray-100">
-              <CardTitle className="text-lg text-gray-800">Activities</CardTitle>
-              <CardDescription>{pipeline.activities.length} activities in this pipeline run</CardDescription>
-            </CardHeader>
+          <CardHeader className="bg-white border-b border-gray-100">
+      <CardTitle className="text-lg text-gray-800">Activities</CardTitle>
+      <CardDescription>
+        <div className="flex items-center gap-4">
+          <span>{pipeline.activities.length} activities in this pipeline run</span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center">
+              <span className="w-3 h-3 rounded-full bg-green-500 mr-1"></span>
+              <span className="text-xs">Success: {pipeline.activities.filter(a => a.status === 'Succeeded').length}</span>
+            </span>
+            <span className="flex items-center">
+              <span className="w-3 h-3 rounded-full bg-rose-500 mr-1"></span>
+              <span className="text-xs">Failed: {pipeline.activities.filter(a => a.status === 'Failed').length}</span>
+            </span>
+            <span className="flex items-center">
+              <span className="w-3 h-3 rounded-full bg-amber-500 mr-1"></span>
+              <span className="text-xs">Running: {pipeline.activities.filter(a => a.status === 'Running').length}</span>
+            </span>
+          </div>
+        </div>
+      </CardDescription>
+    </CardHeader>
             <CardContent className="pt-6 bg-white">
               <div className="space-y-4">
                 {pipeline.activities.map((activity) => (
@@ -865,7 +893,7 @@ export default function PipelineDetailsPage() {
                     {activity.output?.executionDetails && activity.output.executionDetails.length > 0 && (
                       <div>
                         <h4 className="text-sm font-medium text-gray-500 mb-2">Execution Details</h4>
-                        {activity.output.executionDetails.map((detail, idx) => (
+                        {activity.output.executionDetails.map((detail:any, idx:any) => (
                           <div key={`exec-${activity.activityRunId}-${idx}`} className="p-3 bg-gray-50 border rounded mb-3">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                               <div>
@@ -942,7 +970,7 @@ export default function PipelineDetailsPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {pipeline.activities.map((activity) => 
-                          activity.output?.billingReference?.billableDuration?.map((billing, idx) => (
+                          activity.output?.billingReference?.billableDuration?.map((billing:any, idx:any) => (
                             <tr key={`billing-${activity.activityRunId}-${idx}`}>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 {activity.activityName}

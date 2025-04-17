@@ -62,7 +62,7 @@ export default function PipelineDashboard() {
     console.log("fetch call before")
     fetchPipelineData()
     refreshAllData();
-    const interval = setInterval(() => refreshAllData(), 100000);
+    const interval = setInterval(() => refreshAllData(), 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -204,7 +204,7 @@ export default function PipelineDashboard() {
                           <div className="nexus-run-details">
                             <div className="nexus-run-detail"><Clock className="nexus-detail-icon" /><span className="nexus-detail-label">Duration:</span><span className="nexus-detail-value">{formatDuration(run.runStart, run.runEnd)}</span></div>
                             <div className="nexus-run-detail"><Database className="nexus-detail-icon" /><span className="nexus-detail-label">Data:</span><span className="nexus-detail-value">N/A</span></div>
-                            <div className="nexus-run-detail"><Calendar className="nexus-detail-icon" /><span className="nexus-detail-label">Started:</span><span className="nexus-detail-value">N/A</span></div>
+                            <div className="nexus-run-detail"><Calendar className="nexus-detail-icon" /><span className="nexus-detail-label">Created:</span><span className="nexus-detail-value">{run.runStart.slice(0,10)}</span></div>
                           </div>
                         </CardContent>
                       </Card>
